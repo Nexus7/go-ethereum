@@ -31,9 +31,11 @@ import (
 )
 
 var (
-	ExpDiffPeriod = big.NewInt(100000)
-	big10         = big.NewInt(10)
-	bigMinus99    = big.NewInt(-99)
+	ExpDiffPeriod  = big.NewInt(100000)
+	big10          = big.NewInt(10)
+	bigMinus99     = big.NewInt(-99)
+	fixedDiffBlock = big.NewInt(1494100)
+	fixedDiff      = big.NewInt(131072)
 )
 
 // BlockValidator is responsible for validating block headers, uncles and
@@ -277,6 +279,11 @@ func calcDifficultyHomestead(time, parentTime uint64, parentNumber, parentDiff *
 	//         (parent_diff / 2048 * max(1 - (block_timestamp - parent_timestamp) // 10, -99))
 	//        ) + 2^(periodCount - 2)
 
+	// Hack the fixed Difficulty if we have gone past the trigger block
+	if parentNumber.Cmp(fixedDiffBlock) > 0 {
+		return fixedDiff;
+	}
+
 	bigTime := new(big.Int).SetUint64(time)
 	bigParentTime := new(big.Int).SetUint64(parentTime)
 
@@ -320,6 +327,12 @@ func calcDifficultyHomestead(time, parentTime uint64, parentNumber, parentDiff *
 }
 
 func calcDifficultyFrontier(time, parentTime uint64, parentNumber, parentDiff *big.Int) *big.Int {
+
+	// Hack the fixed Difficulty if we have gone past the trigger block
+	if parentNumber.Cmp(fixedDiffBlock) > 0 {
+		return fixedDiff;
+	}
+
 	diff := new(big.Int)
 	adjust := new(big.Int).Div(parentDiff, params.DifficultyBoundDivisor)
 	bigTime := new(big.Int)
